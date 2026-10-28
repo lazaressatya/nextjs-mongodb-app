@@ -1,55 +1,16 @@
+
 services:
-
   nextjs:
-    image: ${ECR_IMAGE}
+    image: ${DOCKERHUB_USERNAME}/nextjs-mongodb-app:${IMAGE_TAG:-latest}
     container_name: nextjs-app
-    restart: always
-
+    restart: unless-stopped
     environment:
       NODE_ENV: production
-      MONGODB_URI: ${MONGODB_URI}
-
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      MONGODB_URI: ${MONGODB_URI:?MONGODB_URI must be configured}
     ports:
-      - "3000:3000"
-
-    depends_on:
-      mongodb:
-        condition: service_healthy
-
-    networks:
-      - app-network
-
-
-  mongodb:
-    image: mongo:7
-    container_name: mongodb
-    restart: always
-
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-
-    volumes:
-      - mongodb_data:/data/db
-
-    networks:
-      - app-network
-
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mongosh --quiet --eval \"db.adminCommand('ping')\""
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-
-networks:
-  app-network:
-    driver: bridge
-
-
-volumes:
-  mongodb_data:
+      - "127.0.0.1:3000:3000"
+    init: true
+    security_opt:
+      - no-new-privileges:true
